@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 3000;
 const SEED = [0, 3, 3, 7, 2, 2, 2, 10, 4, 1, 7, 7, 7, 5, 8, 3, 11, 6, 2, 2, 9, 4, 4, 2];
 const MEMBER_COUNT = 12;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const COMMENT_MAX_LEN = 300;
 
 function isoOf(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -38,11 +39,12 @@ function sortEntries(list) {
 }
 
 function isValidEntry(body) {
-  return !!body
-    && DATE_RE.test(body.date)
-    && Number.isInteger(body.winnerId)
-    && body.winnerId >= 0
-    && body.winnerId < MEMBER_COUNT;
+  if (!body || !DATE_RE.test(body.date) || !Number.isInteger(body.winnerId)) return false;
+  if (body.winnerId < 0 || body.winnerId >= MEMBER_COUNT) return false;
+  if (body.comment !== undefined && body.comment !== null) {
+    if (typeof body.comment !== 'string' || body.comment.length > COMMENT_MAX_LEN) return false;
+  }
+  return true;
 }
 
 // --- in-memory cache + serialized persistence -------------------------
@@ -142,10 +144,13 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/entries' && req.method === 'POST') {
       const body = await readJsonBody(req);
       if (!isValidEntry(body)) {
-        return sendJson(res, 400, { error: 'Expected { date: "YYYY-MM-DD", winnerId: 0-' + (MEMBER_COUNT - 1) + ' }' });
+        return sendJson(res, 400, { error: 'Expected { date: "YYYY-MM-DD", winnerId: 0-' + (MEMBER_COUNT - 1) + ', comment?: string up to ' + COMMENT_MAX_LEN + ' chars }' });
       }
+      const comment = typeof body.comment === 'string' ? body.comment.trim() : '';
       entries = entries.filter((e) => e.date !== body.date);
-      entries.push({ date: body.date, winnerId: body.winnerId });
+      const entry = { date: body.date, winnerId: body.winnerId };
+      if (comment) entry.comment = comment;
+      entries.push(entry);
       sortEntries(entries);
       await persist();
       return sendJson(res, 200, entries);
