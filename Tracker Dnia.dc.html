@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:#0b0906;color:#efe6d0;font-family:'Barlow',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:#f5c542;text-decoration:none}
+  a:hover{color:#ffe9a8}
+  ::selection{background:#f5c542;color:#0b0906}
+  input[type=date]{color-scheme:dark}
+  @keyframes confetti-fall{0%{transform:translateY(-40px) rotate(0);opacity:0}8%{opacity:1}100%{transform:translateY(108vh) rotate(760deg);opacity:.85}}
+  @keyframes fanfare-in{0%{transform:translate(-50%,-140%) scale(.7);opacity:0}55%{transform:translate(-50%,10%) scale(1.06);opacity:1}70%{transform:translate(-50%,-4%) scale(.98)}100%{transform:translate(-50%,0) scale(1);opacity:1}}
+  @keyframes glow-pulse{0%,100%{opacity:.55}50%{opacity:.9}}
+  @keyframes shine{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  @keyframes hype-shake{0%,100%{transform:translate(0,0)}10%{transform:translate(-8px,4px) rotate(-.6deg)}25%{transform:translate(9px,-5px) rotate(.7deg)}40%{transform:translate(-7px,6px) rotate(-.5deg)}55%{transform:translate(8px,-3px) rotate(.5deg)}70%{transform:translate(-5px,4px)}85%{transform:translate(4px,-2px)}}
+  @keyframes gold-flash{0%{opacity:0}18%{opacity:.85}100%{opacity:0}}
+  @keyframes slot-pop{0%{transform:scale(.7);opacity:.2;filter:blur(4px)}100%{transform:scale(1);opacity:1;filter:blur(0)}}
+</style>
+</helmet>
+<div ref="{{ setRootRef }}" style="position:relative;min-height:100vh;overflow:hidden;background:radial-gradient(1200px 620px at 50% -160px,rgba(245,197,66,0.22),transparent 70%),radial-gradient(900px 500px at 100% 110%,rgba(245,197,66,0.06),transparent 70%),#0b0906">
+
+  <div ref="{{ setConfettiRef }}" style="position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999"></div>
+  <div ref="{{ setFlashRef }}" style="position:fixed;inset:0;pointer-events:none;z-index:9998;background:radial-gradient(circle at 50% 40%,rgba(255,235,170,.9),rgba(245,197,66,.5) 45%,transparent 72%);opacity:0"></div>
+
+  <sc-if value="{{ spinning }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:10001;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(7,6,4,.92);backdrop-filter:blur(3px)">
+      <div style="font-family:'Barlow';font-weight:800;letter-spacing:6px;text-transform:uppercase;font-size:15px;color:#c9a24a">🎰 Losowanie werdyktu 🎰</div>
+      <div key="{{ spinName }}" style="font-family:'Anton';font-size:clamp(40px,9vw,104px);text-transform:uppercase;line-height:1;margin-top:18px;animation:slot-pop .12s ease;background:linear-gradient(180deg,#fff5d6,#f5c542,#a9791f);-webkit-background-clip:text;background-clip:text;color:transparent">{{ spinName }}</div>
+      <div style="color:#8f866f;margin-top:20px;font-size:14px">Los jest ślepy. Paweł niekoniecznie.</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showFanfare }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;top:26px;left:50%;z-index:10000;animation:fanfare-in .9s cubic-bezier(.2,.9,.3,1.4) both;pointer-events:none">
+      <div style="background:linear-gradient(180deg,#ffe9a8,#f5c542,#c9962e);color:#241a05;font-family:'Anton';font-size:clamp(20px,3.4vw,40px);letter-spacing:.5px;padding:14px 30px;border-radius:16px;box-shadow:0 18px 50px rgba(245,197,66,.4),0 0 0 4px rgba(11,9,6,.85),0 0 0 6px rgba(245,197,66,.5);white-space:nowrap;text-align:center;text-transform:uppercase">
+        🎉 {{ fanfareName }} wygrywa dzień! 🎉
+        <div style="font-family:'Barlow';font-weight:700;font-size:13px;letter-spacing:2px;margin-top:2px;opacity:.75">WERDYKT ZATWIERDZONY PRZEZ PAWŁA</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="max-width:1120px;margin:0 auto;padding:clamp(28px,5vw,64px) clamp(16px,4vw,40px) 80px">
+
+    <!-- HEADER -->
+    <div style="text-align:center;margin-bottom:clamp(28px,5vw,52px)">
+      <div style="display:inline-flex;align-items:center;gap:10px;font-family:'Barlow';font-weight:800;letter-spacing:4px;font-size:13px;text-transform:uppercase;color:#c9a24a;border:1px solid rgba(245,197,66,.3);border-radius:999px;padding:7px 18px">🏆 Oficjalne Mistrzostwa 🏆</div>
+      <h1 style="font-family:'Anton';font-weight:400;line-height:.92;margin:18px 0 0;font-size:clamp(46px,9vw,116px);letter-spacing:1px;text-transform:uppercase;background:linear-gradient(180deg,#fff5d6 0%,#f5c542 48%,#a9791f 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 24px rgba(245,197,66,.25))">Kto wygrał<br>dzień?</h1>
+      <p style="max-width:640px;margin:20px auto 0;color:#b7ad93;font-size:clamp(15px,2vw,18px);line-height:1.5">Werdykt ogłasza <b style="color:#f7e4a8">Paweł Gawędzki</b> — który (czysty przypadek) również startuje w rywalizacji. Obiektywizm w 100% gwarantowany. 😇</p>
+    </div>
+
+    <!-- HERO WINNER -->
+    <div style="position:relative;border:1px solid rgba(245,197,66,.28);border-radius:26px;padding:clamp(24px,4vw,46px);text-align:center;background:linear-gradient(180deg,rgba(245,197,66,.10),rgba(255,255,255,.02));box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden">
+      <div style="position:absolute;inset:-40% 30% auto;height:340px;background:radial-gradient(closest-side,rgba(245,197,66,.4),transparent);animation:glow-pulse 4s ease-in-out infinite;pointer-events:none"></div>
+      <div style="position:relative">
+        <div style="font-family:'Barlow';font-weight:800;letter-spacing:5px;font-size:13px;text-transform:uppercase;color:#c9a24a">Zwycięzca dnia • {{ heroDateLabel }}</div>
+        <sc-if value="{{ todayWinnerExists }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:20px">
+            <div style="width:118px;height:118px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Anton';font-size:44px;color:#241a05;background:linear-gradient(180deg,#ffe9a8,#f5c542,#c9962e);box-shadow:0 0 0 6px rgba(11,9,6,.9),0 0 0 9px rgba(245,197,66,.55),0 20px 50px rgba(245,197,66,.35)">{{ todayInitials }}</div>
+            <div style="font-family:'Anton';font-size:clamp(34px,6vw,70px);line-height:1;margin-top:20px;text-transform:uppercase;color:#fff5d6;filter:drop-shadow(0 4px 16px rgba(245,197,66,.3))">{{ todayName }}</div>
+            <div style="color:#e7b84a;font-size:18px;font-weight:600;font-style:italic;margin-top:4px">{{ todayNick }}</div>
+            <div style="display:inline-block;margin-top:16px;font-size:34px">👑</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ todayNotDecided }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top:22px">
+            <div style="font-size:58px;line-height:1">⏳</div>
+            <div style="font-family:'Anton';font-size:clamp(26px,4vw,42px);text-transform:uppercase;color:#f7e4a8;margin-top:8px">Dzień jeszcze nierozstrzygnięty</div>
+            <div style="color:#b7ad93;margin-top:6px;font-size:16px">Paweł jeszcze się nie wypowiedział. Ogłoś zwycięzcę poniżej 👇</div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+
+    <!-- ANNOUNCE PANEL -->
+    <div style="margin-top:clamp(22px,3.5vw,40px);border:1px solid rgba(245,197,66,.2);border-radius:22px;padding:clamp(20px,3vw,32px);background:rgba(255,255,255,.028)">
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 24px;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-family:'Anton';font-size:clamp(22px,3vw,32px);text-transform:uppercase;color:#f7e4a8;letter-spacing:.5px">📣 Ogłoś zwycięzcę</div>
+          <div style="color:#b7ad93;font-size:14px;margin-top:2px">Kliknij zawodnika — reszta to formalność.</div>
+        </div>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#c9a24a">Data werdyktu
+          <input type="date" value="{{ announceDate }}" onChange="{{ onDateChange }}" style="background:#0b0906;border:1px solid rgba(245,197,66,.35);color:#f7e4a8;font-family:'Barlow';font-weight:600;font-size:15px;padding:9px 12px;border-radius:10px">
+        </label>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px">
+        <sc-for list="{{ chips }}" as="chip" hint-placeholder-count="12">
+          <button onClick="{{ chip.onClick }}" style="display:flex;align-items:center;gap:11px;text-align:left;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(245,197,66,.16);border-radius:14px;padding:10px 12px;color:#efe6d0;transition:transform .12s ease,border-color .12s ease,background .12s ease" style-hover="border-color:rgba(245,197,66,.7);background:rgba(245,197,66,.12);transform:translateY(-2px)">
+            <span style="flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Anton';font-size:16px;color:#241a05;background:linear-gradient(180deg,#ffe9a8,#e8b93e)">{{ chip.initials }}</span>
+            <span style="min-width:0">
+              <span style="display:block;font-weight:700;font-size:14px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chip.name }} {{ chip.crown }}</span>
+              <span style="display:block;font-size:12px;font-style:italic;color:#c9a24a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chip.nick }}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+      <button onClick="{{ spin }}" style="margin-top:16px;width:100%;cursor:pointer;font-family:'Anton';font-size:clamp(18px,3vw,26px);letter-spacing:1px;text-transform:uppercase;color:#241a05;background:linear-gradient(180deg,#ffe9a8,#f5c542,#c9962e);border:none;border-radius:14px;padding:16px;box-shadow:0 12px 30px rgba(245,197,66,.35),inset 0 1px 0 rgba(255,255,255,.5)" style-hover="filter:brightness(1.06)">🎰 Niech los zadecyduje <span style="font-family:'Barlow';font-weight:600;font-size:13px;text-transform:none;opacity:.7">(gdy Paweł się waha)</span></button>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div style="margin-top:clamp(22px,3.5vw,40px);display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px">
+      <div style="border:1px solid rgba(245,197,66,.2);border-radius:18px;padding:20px;background:rgba(255,255,255,.028)">
+        <div style="font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#c9a24a">Dni rozegrane</div>
+        <div style="font-family:'Anton';font-size:52px;line-height:1;color:#f5c542;margin-top:8px">{{ totalDays }}</div>
+      </div>
+      <div style="border:1px solid rgba(245,197,66,.2);border-radius:18px;padding:20px;background:rgba(255,255,255,.028)">
+        <div style="font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#c9a24a">👑 Aktualny lider</div>
+        <div style="font-family:'Anton';font-size:26px;line-height:1.05;color:#fff5d6;margin-top:10px;text-transform:uppercase">{{ leaderName }}</div>
+        <div style="color:#b7ad93;font-size:13px;margin-top:4px">{{ leaderWins }} zwycięstw</div>
+      </div>
+      <div style="border:1px solid rgba(245,197,66,.2);border-radius:18px;padding:20px;background:rgba(255,255,255,.028)">
+        <div style="font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#c9a24a">🔥 Rekord passy</div>
+        <div style="font-family:'Anton';font-size:40px;line-height:1;color:#f5c542;margin-top:8px">{{ recordCount }} <span style="font-size:18px;color:#b7ad93">dni</span></div>
+        <div style="color:#b7ad93;font-size:13px;margin-top:4px">{{ recordHolder }}</div>
+      </div>
+      <div style="border:1px solid rgba(245,197,66,.2);border-radius:18px;padding:20px;background:rgba(255,255,255,.028)">
+        <div style="font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#c9a24a">⚡ Passa na teraz</div>
+        <div style="font-family:'Anton';font-size:40px;line-height:1;color:#f5c542;margin-top:8px">{{ hotCount }} <span style="font-size:18px;color:#b7ad93">z rzędu</span></div>
+        <div style="color:#b7ad93;font-size:13px;margin-top:4px">{{ hotName }}</div>
+      </div>
+    </div>
+
+    <!-- PODIUM -->
+    <div style="margin-top:clamp(34px,5vw,60px)">
+      <h2 style="font-family:'Anton';text-align:center;font-size:clamp(26px,4vw,42px);text-transform:uppercase;letter-spacing:2px;margin:0 0 30px;background:linear-gradient(180deg,#fff5d6,#f5c542,#a9791f);-webkit-background-clip:text;background-clip:text;color:transparent">🏅 Podium Chwały</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;align-items:end;gap:clamp(8px,2vw,20px);max-width:760px;margin:0 auto">
+        <!-- 2nd -->
+        <div style="text-align:center">
+          <div style="width:76px;height:76px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Anton';font-size:28px;color:#20242b;background:linear-gradient(180deg,#f4f6fb,#c3cad6,#9aa3b2);box-shadow:0 0 0 4px rgba(11,9,6,.9),0 0 0 6px rgba(196,204,214,.6)">{{ p2Initials }}</div>
+          <div style="font-weight:800;font-size:15px;color:#eef1f6;line-height:1.15;text-transform:uppercase;font-family:'Anton'">{{ p2Name }}</div>
+          <div style="font-size:12px;color:#c9a24a;font-style:italic">{{ p2Wins }} wygranych</div>
+          <div style="margin-top:12px;height:118px;border-radius:14px 14px 0 0;background:linear-gradient(180deg,rgba(196,204,214,.35),rgba(196,204,214,.08));border:1px solid rgba(196,204,214,.4);border-bottom:none;display:flex;align-items:flex-start;justify-content:center;padding-top:14px;font-family:'Anton';font-size:40px;color:#c3cad6">2</div>
+        </div>
+        <!-- 1st -->
+        <div style="text-align:center">
+          <div style="font-size:26px;margin-bottom:2px">👑</div>
+          <div style="width:92px;height:92px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Anton';font-size:34px;color:#241a05;background:linear-gradient(180deg,#ffe9a8,#f5c542,#c9962e);box-shadow:0 0 0 5px rgba(11,9,6,.9),0 0 0 8px rgba(245,197,66,.65),0 14px 36px rgba(245,197,66,.4)">{{ p1Initials }}</div>
+          <div style="font-weight:800;font-size:18px;color:#fff5d6;line-height:1.12;text-transform:uppercase;font-family:'Anton'">{{ p1Name }}</div>
+          <div style="font-size:13px;color:#e7b84a;font-style:italic">{{ p1Wins }} wygranych • {{ p1Rate }}%</div>
+          <div style="margin-top:12px;height:168px;border-radius:14px 14px 0 0;background:linear-gradient(180deg,rgba(245,197,66,.4),rgba(245,197,66,.1));border:1px solid rgba(245,197,66,.55);border-bottom:none;display:flex;align-items:flex-start;justify-content:center;padding-top:16px;font-family:'Anton';font-size:56px;color:#f5c542">1</div>
+        </div>
+        <!-- 3rd -->
+        <div style="text-align:center">
+          <div style="width:70px;height:70px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Anton';font-size:25px;color:#2b1d0f;background:linear-gradient(180deg,#e8b487,#cd7f45,#9c5a2c);box-shadow:0 0 0 4px rgba(11,9,6,.9),0 0 0 6px rgba(205,127,69,.55)">{{ p3Initials }}</div>
+          <div style="font-weight:800;font-size:15px;color:#f3ddc8;line-height:1.15;text-transform:uppercase;font-family:'Anton'">{{ p3Name }}</div>
+          <div style="font-size:12px;color:#c9a24a;font-style:italic">{{ p3Wins }} wygranych</div>
+          <div style="margin-top:12px;height:92px;border-radius:14px 14px 0 0;background:linear-gradient(180deg,rgba(205,127,69,.35),rgba(205,127,69,.08));border:1px solid rgba(205,127,69,.45);border-bottom:none;display:flex;align-items:flex-start;justify-content:center;padding-top:12px;font-family:'Anton';font-size:34px;color:#cd7f45">3</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div style="margin-top:clamp(34px,5vw,60px)">
+      <h2 style="font-family:'Anton';font-size:clamp(24px,3.5vw,38px);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 20px;color:#f7e4a8">📊 Tabela Wszech Czasów</h2>
+      <div style="border:1px solid rgba(245,197,66,.2);border-radius:18px;overflow:hidden;background:rgba(255,255,255,.025)">
+        <div style="display:grid;grid-template-columns:56px 1fr 72px 72px 78px 78px;gap:8px;padding:12px 16px;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#c9a24a;border-bottom:1px solid rgba(245,197,66,.16)">
+          <div>#</div><div>Zawodnik</div><div style="text-align:center">Wyg.</div><div style="text-align:center">% dni</div><div style="text-align:center">Passa</div><div style="text-align:center">Rekord</div>
+        </div>
+        <sc-for list="{{ leaderboard }}" as="row" hint-placeholder-count="12">
+          <div style="display:grid;grid-template-columns:56px 1fr 72px 72px 78px 78px;gap:8px;padding:12px 16px;align-items:center;border-bottom:1px solid rgba(245,197,66,.07)">
+            <div style="font-family:'Anton';font-size:20px;color:#c9a24a;text-align:center">{{ row.rankBadge }}</div>
+            <div style="display:flex;align-items:center;gap:11px;min-width:0">
+              <span style="flex:0 0 auto;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Anton';font-size:15px;color:#241a05;background:linear-gradient(180deg,#ffe9a8,#e8b93e)">{{ row.initials }}</span>
+              <span style="min-width:0">
+                <span style="display:block;font-weight:700;font-size:15px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ row.name }}</span>
+                <span style="display:block;font-size:12px;font-style:italic;color:#c9a24a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ row.nick }}</span>
+              </span>
+            </div>
+            <div style="text-align:center;font-family:'Anton';font-size:22px;color:#f5c542">{{ row.wins }}</div>
+            <div style="text-align:center;font-weight:700;color:#e7d9b3">{{ row.winRateLabel }}</div>
+            <div style="text-align:center;font-weight:700;color:#e7d9b3">{{ row.streakLabel }}</div>
+            <div style="text-align:center;font-weight:700;color:#b7ad93">{{ row.longest }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- BADGES -->
+    <div style="margin-top:clamp(34px,5vw,60px)">
+      <h2 style="font-family:'Anton';font-size:clamp(24px,3.5vw,38px);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 20px;color:#f7e4a8">🎖️ Ściana Odznak</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">
+        <sc-for list="{{ badges }}" as="b" hint-placeholder-count="6">
+          <div style="border:1px solid rgba(245,197,66,.22);border-radius:18px;padding:20px;background:linear-gradient(180deg,rgba(245,197,66,.07),rgba(255,255,255,.02))">
+            <div style="font-size:34px;line-height:1">{{ b.emoji }}</div>
+            <div style="font-family:'Anton';font-size:19px;text-transform:uppercase;color:#f7e4a8;margin-top:10px;letter-spacing:.5px">{{ b.title }}</div>
+            <div style="font-weight:800;font-size:16px;color:#fff5d6;margin-top:6px">{{ b.holder }}</div>
+            <div style="color:#b7ad93;font-size:13px;margin-top:3px">{{ b.desc }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div style="margin-top:clamp(34px,5vw,60px)">
+      <h2 style="font-family:'Anton';font-size:clamp(24px,3.5vw,38px);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 20px;color:#f7e4a8">🗓️ Kronika Werdyktów</h2>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ history }}" as="h" hint-placeholder-count="8">
+          <div style="display:flex;align-items:center;gap:14px;border:1px solid rgba(245,197,66,.14);border-radius:14px;padding:11px 16px;background:rgba(255,255,255,.022)">
+            <span style="flex:0 0 auto;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Anton';font-size:15px;color:#241a05;background:linear-gradient(180deg,#ffe9a8,#e8b93e)">{{ h.initials }}</span>
+            <div style="flex:1;min-width:0">
+              <span style="font-weight:700;font-size:15px">{{ h.name }}</span>
+              <span style="color:#c9a24a;font-style:italic;font-size:13px"> — {{ h.nick }}</span>
+            </div>
+            <div style="text-align:right;flex:0 0 auto">
+              <div style="font-weight:700;font-size:13px;color:#e7d9b3">{{ h.dateLabel }}</div>
+              <div style="font-size:11px;color:#8f866f;text-transform:capitalize">{{ h.weekday }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- FOOTER / CONTROLS -->
+    <div style="margin-top:clamp(34px,5vw,56px);text-align:center">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center">
+        <button onClick="{{ undoLast }}" style="cursor:pointer;background:transparent;border:1px solid rgba(245,197,66,.4);color:#f5c542;font-family:'Barlow';font-weight:700;font-size:14px;padding:11px 20px;border-radius:12px" style-hover="background:rgba(245,197,66,.12)">↩︎ Cofnij ostatni werdykt</button>
+        <button onClick="{{ resetAll }}" style="cursor:pointer;background:transparent;border:1px solid rgba(224,110,90,.4);color:#e0806a;font-family:'Barlow';font-weight:700;font-size:14px;padding:11px 20px;border-radius:12px" style-hover="background:rgba(224,110,90,.12)">🗑️ Wyczyść wszystko</button>
+      </div>
+      <p style="max-width:620px;margin:26px auto 0;color:#7d745f;font-size:13px;line-height:1.6">🏆 <b style="color:#c9a24a">Mistrzostwa w Wygrywaniu Dnia™</b> • Wyniki ostateczne, nieodwołalne i w 100% subiektywne • Reklamacje kierować do Pawła (powodzenia). 😏</p>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;confetti&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Zabawa&quot; },
+  &quot;showNicknames&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Zabawa&quot; },
+  &quot;historyLength&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 14, &quot;min&quot;: 5, &quot;max&quot;: 30, &quot;step&quot;: 1, &quot;unit&quot;: &quot; dni&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Historia&quot; }
+}">
+class Component extends DCLogic {
+  MEMBERS = [
+    { id: 0,  name: 'Łukasz Kaniecki',      nick: 'Kanonier' },
+    { id: 1,  name: 'Marcin Piotrowski',    nick: 'Turbo Marcin' },
+    { id: 2,  name: 'Natalia Pietnoczko',   nick: 'Nataliada' },
+    { id: 3,  name: 'Paweł Gawędzki',       nick: 'Sędzia-Zawodnik' },
+    { id: 4,  name: 'Piotr Pawłowski',      nick: 'Piotr Piorun' },
+    { id: 5,  name: 'Radosław Sęk',         nick: 'Sęk w tym' },
+    { id: 6,  name: 'Sławomir Kwiatkowski', nick: 'Kwiat Mistrzostw' },
+    { id: 7,  name: 'Zuzanna Adamiec',      nick: 'Zuza Zamiata' },
+    { id: 8,  name: 'Dominik Oczoś',        nick: 'Oko Cyklonu' },
+    { id: 9,  name: 'Filip Liwiński',       nick: 'Filip Flesz' },
+    { id: 10, name: 'Grzegorz Izdebski',    nick: 'Grzesiek Grand' },
+    { id: 11, name: 'Jakub Gaj',            nick: 'Gaj Fajny' },
+  ];
+  SEED = [0,3,3,7,2,2,2,10,4,1,7,7,7,5,8,3,11,6,2,2,9,4,4,2];
+  WD_GEN = ['niedziel','poniedziałków','wtorków','śród','czwartków','piątków','sobót'];
+  KEY = 'dwt-entries-v1';
+
+  state = { entries: [], announceDate: '', showFanfare: false, fanfareName: '', ready: false, spinning: false, spinName: '' };
+
+  isoOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  todayISO(){ return this.isoOf(new Date()); }
+  parseISO(s){ return new Date(s+'T00:00:00'); }
+  cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+  initials(name){ return name.split(' ').filter(Boolean).map(w=>w[0].toUpperCase()).join('').slice(0,2); }
+  fmt(iso, wd){ return new Intl.DateTimeFormat('pl-PL', wd?{weekday:'long',day:'numeric',month:'long'}:{day:'numeric',month:'long'}).format(this.parseISO(iso)); }
+  memberById(id){ return this.MEMBERS.find(m=>m.id===id); }
+
+  seed(){
+    const today = new Date();
+    return this.SEED.map((wid,i)=>{
+      const d = new Date(today);
+      d.setDate(today.getDate() - (this.SEED.length - i));
+      return { date: this.isoOf(d), winnerId: wid };
+    });
+  }
+
+  componentDidMount(){
+    let entries = null;
+    try { entries = JSON.parse(localStorage.getItem(this.KEY)); } catch(e){}
+    if(!Array.isArray(entries)){ entries = this.seed(); try{ localStorage.setItem(this.KEY, JSON.stringify(entries)); }catch(e){} }
+    this.setState({ entries, announceDate: this.todayISO(), ready: true });
+  }
+
+  save(entries){ try{ localStorage.setItem(this.KEY, JSON.stringify(entries)); }catch(e){}; this.setState({ entries }); }
+
+  announce(id){
+    const date = this.state.announceDate || this.todayISO();
+    const entries = this.state.entries.filter(e=>e.date!==date);
+    entries.push({ date, winnerId: id });
+    entries.sort((a,b)=> a.date<b.date?-1:1);
+    this.save(entries);
+    const m = this.memberById(id);
+    if(this.props.confetti ?? true){ this.fireConfetti(); this.playHype(); this.speak(m?m.name:''); }
+    this.setState({ showFanfare: true, fanfareName: (m?m.name:'').toUpperCase() });
+    clearTimeout(this._ft);
+    this._ft = setTimeout(()=>this.setState({ showFanfare: false }), 4000);
+  }
+
+  spin(){
+    if(this.state.spinning) return;
+    try{ const AC=window.AudioContext||window.webkitAudioContext; if(AC){ this._ac=this._ac||new AC(); if(this._ac.state==='suspended') this._ac.resume(); } }catch(e){}
+    const ids=this.MEMBERS.map(m=>m.id);
+    const totalTicks=26+Math.floor(Math.random()*8);
+    let ticks=0;
+    this.setState({ spinning:true });
+    const tick=()=>{
+      const m=this.memberById(ids[Math.floor(Math.random()*ids.length)]);
+      this.setState({ spinName:m.name });
+      this.blip(180+Math.random()*220);
+      ticks++;
+      if(ticks<totalTicks){ this._sp=setTimeout(tick, 55+ticks*ticks*0.9); }
+      else { const win=this.memberById(ids[Math.floor(Math.random()*ids.length)]); this.setState({ spinning:false, spinName:'' }); this.announce(win.id); }
+    };
+    tick();
+  }
+
+  playHype(){
+    if(this.rootRef){ this.rootRef.style.animation='none'; void this.rootRef.offsetWidth; this.rootRef.style.animation='hype-shake .6s ease'; }
+    if(this.flashRef){ this.flashRef.style.animation='none'; void this.flashRef.offsetWidth; this.flashRef.style.animation='gold-flash .75s ease'; }
+    this.playFanfare();
+  }
+
+  ctx(){ try{ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; this._ac=this._ac||new AC(); if(this._ac.state==='suspended') this._ac.resume(); return this._ac; }catch(e){ return null; } }
+
+  blip(freq){ const ac=this.ctx(); if(!ac) return; const o=ac.createOscillator(), g=ac.createGain(); o.type='square'; o.frequency.value=freq; const t=ac.currentTime; g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.06,t+0.005); g.gain.exponentialRampToValueAtTime(0.0001,t+0.06); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+0.07); }
+
+  playFanfare(){
+    const ac=this.ctx(); if(!ac) return;
+    const now=ac.currentTime;
+    const melody=[523.25,659.25,783.99,1046.5];
+    melody.forEach((f,i)=>{ const o=ac.createOscillator(), g=ac.createGain(); o.type='triangle'; o.frequency.value=f; const t=now+i*0.12; g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.24,t+0.03); g.gain.exponentialRampToValueAtTime(0.001,t+0.5); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+0.55); });
+    [523.25,659.25,783.99,1046.5].forEach(f=>{ const o=ac.createOscillator(), g=ac.createGain(); o.type='sawtooth'; o.frequency.value=f; const t=now+0.52; g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.16,t+0.05); g.gain.exponentialRampToValueAtTime(0.001,t+1.3); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+1.35); });
+  }
+
+  speak(name){ try{ if(!('speechSynthesis' in window)||!name) return; const u=new SpeechSynthesisUtterance('Zwycięzcą dnia zostaje... '+name+'!'); u.lang='pl-PL'; u.rate=0.95; u.pitch=1.15; speechSynthesis.cancel(); setTimeout(()=>speechSynthesis.speak(u), 650); }catch(e){} }
+
+  undoLast(){
+    const e = [...this.state.entries].sort((a,b)=> a.date<b.date?-1:1);
+    if(!e.length) return;
+    e.pop();
+    this.save(e);
+  }
+
+  resetAll(){
+    if(!confirm('Wyczyścić CAŁĄ historię mistrzostw? Tego nie da się cofnąć (Paweł się nie ucieszy).')) return;
+    this.save([]);
+  }
+
+  fireConfetti(){
+    const layer = this.confettiRef; if(!layer) return;
+    const em = ['🏆','🥇','✨','🎉','👑','⭐','🎊','🏆','💥'];
+    for(let i=0;i<96;i++){
+      const s = document.createElement('span');
+      s.textContent = em[i % em.length];
+      s.style.cssText = 'position:absolute;top:-40px;left:'+(Math.random()*100)+'%;font-size:'+(16+Math.random()*26)+'px;animation:confetti-fall '+(1.7+Math.random()*1.5)+'s cubic-bezier(.35,.1,.4,1) '+(Math.random()*0.35)+'s forwards';
+      layer.appendChild(s);
+      setTimeout(()=>s.remove(), 3800);
+    }
+  }
+
+  build(){
+    const showNicks = this.props.showNicknames ?? true;
+    const histLen = this.props.historyLength ?? 14;
+    const M = this.MEMBERS;
+    const entries = [...this.state.entries].sort((a,b)=> a.date<b.date?-1:1);
+    const total = entries.length;
+
+    const wins={}, longest={}, current={}, lastWon={}, monthWins={}, wdCount={};
+    M.forEach(m=>{ wins[m.id]=0; longest[m.id]=0; current[m.id]=0; });
+    const monthPrefix = this.todayISO().slice(0,7);
+
+    let run=0, prev=null;
+    entries.forEach(e=>{
+      if(wins[e.winnerId]!=null) wins[e.winnerId]++;
+      if(e.winnerId===prev) run++; else { run=1; prev=e.winnerId; }
+      if(run > (longest[e.winnerId]||0)) longest[e.winnerId]=run;
+      lastWon[e.winnerId]=e.date;
+      if(e.date.slice(0,7)===monthPrefix) monthWins[e.winnerId]=(monthWins[e.winnerId]||0)+1;
+      const day=this.parseISO(e.date).getDay();
+      const k=e.winnerId+'-'+day; wdCount[k]=(wdCount[k]||0)+1;
+    });
+    if(total){
+      const lastId=entries[total-1].winnerId; let c=0;
+      for(let i=total-1;i>=0;i--){ if(entries[i].winnerId===lastId) c++; else break; }
+      current[lastId]=c;
+    }
+
+    const nickOf = m => showNicks ? ('„'+m.nick+'”') : '';
+
+    // leaderboard
+    const lb = M.map(m=>({ m, wins: wins[m.id], longest: longest[m.id], cur: current[m.id] }))
+      .sort((a,b)=> b.wins-a.wins || b.longest-a.longest || a.m.name.localeCompare(b.m.name,'pl'));
+    const medals=['🥇','🥈','🥉'];
+    const leaderboard = lb.map((r,i)=>({
+      rankBadge: i<3 ? medals[i] : String(i+1),
+      initials: this.initials(r.m.name),
+      name: r.m.name,
+      nick: nickOf(r.m),
+      wins: r.wins,
+      winRateLabel: total ? Math.round(r.wins/total*100)+'%' : '0%',
+      streakLabel: r.cur>0 ? (r.cur+' 🔥') : '—',
+      longest: r.longest,
+    }));
+
+    const P = idx => {
+      const r = lb[idx]; if(!r) return {};
+      return { name:r.m.name, initials:this.initials(r.m.name), wins:r.wins, rate: total?Math.round(r.wins/total*100):0 };
+    };
+    const p1=P(0), p2=P(1), p3=P(2);
+
+    // today
+    const todayIso = this.todayISO();
+    const te = entries.find(e=>e.date===todayIso);
+    const tm = te ? this.memberById(te.winnerId) : null;
+
+    // stats
+    const leader = lb[0] && lb[0].wins>0 ? lb[0] : null;
+    let recCount=0, recHolder=null;
+    M.forEach(m=>{ if(longest[m.id]>recCount){ recCount=longest[m.id]; recHolder=m; } });
+    let hotName='—', hotCount=0;
+    if(total){ const lastId=entries[total-1].winnerId; hotCount=current[lastId]; hotName=this.memberById(lastId).name; }
+
+    // badges
+    const badges=[];
+    if(leader) badges.push({ emoji:'👑', title:'Wielki Mistrz', holder:leader.m.name, desc:leader.wins+' zwycięskich dni' });
+    else badges.push({ emoji:'👑', title:'Wielki Mistrz', holder:'Wakat', desc:'Tron czeka na pierwszego zwycięzcę' });
+
+    // hot streak badge
+    if(hotCount>=2) badges.push({ emoji:'🔥', title:'Gorąca Passa', holder:hotName, desc:hotCount+' dni z rzędu — nie do zatrzymania' });
+    else badges.push({ emoji:'🧊', title:'Gorąca Passa', holder:'Nikt (na razie)', desc:'Passa czeka na bohatera' });
+
+    if(recHolder) badges.push({ emoji:'🐐', title:'Rekord Wszech Czasów', holder:recHolder.name, desc:'Najdłuższa passa: '+recCount+' dni' });
+    else badges.push({ emoji:'🐐', title:'Rekord Wszech Czasów', holder:'—', desc:'Brak danych' });
+
+    // dominant weekday
+    let wdBest=0, wdKey=null;
+    Object.keys(wdCount).forEach(k=>{ if(wdCount[k]>wdBest){ wdBest=wdCount[k]; wdKey=k; } });
+    if(wdKey){ const [wid,day]=wdKey.split('-').map(Number); badges.push({ emoji:'📅', title:'Postrach '+this.WD_GEN[day], holder:this.memberById(wid).name, desc:'Wygrał w ten dzień '+wdBest+' razy' }); }
+    else badges.push({ emoji:'📅', title:'Postrach Tygodnia', holder:'—', desc:'Brak danych' });
+
+    // month champ
+    let mBest=0, mId=null;
+    Object.keys(monthWins).forEach(k=>{ if(monthWins[k]>mBest){ mBest=monthWins[k]; mId=Number(k); } });
+    if(mId!=null) badges.push({ emoji:'🍀', title:'Szczęściarz Miesiąca', holder:this.memberById(mId).name, desc:mBest+' wygranych w tym miesiącu' });
+    else badges.push({ emoji:'🍀', title:'Szczęściarz Miesiąca', holder:'—', desc:'Miesiąc dopiero się rozkręca' });
+
+    // curse (fewest wins) — only meaningful if there is spread
+    const minW = Math.min(...M.map(m=>wins[m.id]));
+    const maxW = Math.max(...M.map(m=>wins[m.id]));
+    const cursed = M.find(m=>wins[m.id]===minW);
+    if(maxW>minW) badges.push({ emoji:'🥶', title:'Klątwa Ostatniego', holder:cursed.name, desc: minW===0 ? 'Wciąż 0 wygranych — legenda głosi, że kiedyś...' : 'Ledwie '+minW+' — trzymamy kciuki' });
+    else badges.push({ emoji:'🤝', title:'Idealny Remis', holder:'Cały zespół', desc:'Wszyscy po równo — Paweł ma zagwozdkę' });
+
+    // history
+    const history = [...entries].reverse().slice(0, histLen).map(e=>{
+      const m=this.memberById(e.winnerId);
+      return { initials:this.initials(m.name), name:m.name, nick: m.nick, dateLabel:this.cap(this.fmt(e.date,false)), weekday:this.fmt(e.date,true).split(',')[0] || this.parseISO(e.date).toLocaleDateString('pl-PL',{weekday:'long'}) };
+    });
+
+    // chips
+    const chips = M.map(m=>({
+      initials:this.initials(m.name),
+      name:m.name,
+      nick: showNicks ? m.nick : '',
+      crown: (tm && tm.id===m.id) ? '👑' : '',
+      onClick: ()=>this.announce(m.id),
+    }));
+
+    return {
+      announceDate: this.state.announceDate,
+      heroDateLabel: this.cap(this.fmt(todayIso, true)),
+      todayWinnerExists: !!tm,
+      todayNotDecided: !tm,
+      todayName: tm?tm.name:'',
+      todayNick: tm?('„'+tm.nick+'”'):'',
+      todayInitials: tm?this.initials(tm.name):'',
+      chips,
+      totalDays: total,
+      leaderName: leader?leader.m.name:'Brak',
+      leaderWins: leader?leader.wins:0,
+      recordCount: recCount,
+      recordHolder: recHolder?recHolder.name:'—',
+      hotCount, hotName,
+      p1Name:p1.name||'—', p1Initials:p1.initials||'', p1Wins:p1.wins||0, p1Rate:p1.rate||0,
+      p2Name:p2.name||'—', p2Initials:p2.initials||'', p2Wins:p2.wins||0,
+      p3Name:p3.name||'—', p3Initials:p3.initials||'', p3Wins:p3.wins||0,
+      leaderboard, badges, history,
+      showFanfare: this.state.showFanfare,
+      fanfareName: this.state.fanfareName,
+    };
+  }
+
+  renderVals(){
+    return {
+      ...this.build(),
+      setConfettiRef: el => { this.confettiRef = el; },
+      setRootRef: el => { this.rootRef = el; },
+      setFlashRef: el => { this.flashRef = el; },
+      spin: () => this.spin(),
+      spinning: this.state.spinning,
+      spinName: this.state.spinName,
+      onDateChange: e => this.setState({ announceDate: e.target.value }),
+      undoLast: () => this.undoLast(),
+      resetAll: () => this.resetAll(),
+    };
+  }
+}
+</script>
+</body>
+</html>
