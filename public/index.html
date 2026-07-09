@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kto wygrał dzień?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page" id="root">
+
+  <div class="confetti-layer" id="confettiLayer"></div>
+  <div class="flash-layer" id="flashLayer"></div>
+
+  <div class="spin-overlay" id="spinOverlay" hidden>
+    <div class="spin-kicker">🎰 Losowanie werdyktu 🎰</div>
+    <div class="spin-name" id="spinName"></div>
+    <div class="spin-sub">Los jest ślepy. Paweł niekoniecznie.</div>
+  </div>
+
+  <div class="fanfare-banner" id="fanfareBanner" hidden>
+    <div class="fanfare-card">
+      🎉 <span id="fanfareName"></span> wygrywa dzień! 🎉
+      <div class="fanfare-sub">WERDYKT ZATWIERDZONY PRZEZ PAWŁA</div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-pill">🏆 Oficjalne Mistrzostwa 🏆</div>
+      <h1 class="title">Kto wygrał<br>dzień?</h1>
+      <p class="subtitle">Werdykt ogłasza <b>Paweł Gawędzki</b> — który (czysty przypadek) również startuje w rywalizacji. Obiektywizm w 100% gwarantowany. 😇</p>
+    </div>
+
+    <!-- HERO WINNER -->
+    <div class="hero">
+      <div class="hero-glow"></div>
+      <div class="hero-inner">
+        <div class="hero-label">Zwycięzca dnia • <span id="heroDateLabel"></span></div>
+        <div class="hero-winner" id="heroWinner" hidden>
+          <div class="avatar-hero" id="todayInitials"></div>
+          <div class="hero-name" id="todayName"></div>
+          <div class="hero-nick" id="todayNick"></div>
+          <div class="hero-crown">👑</div>
+        </div>
+        <div class="hero-pending" id="heroPending" hidden>
+          <div class="hero-pending-icon">⏳</div>
+          <div class="hero-pending-title">Dzień jeszcze nierozstrzygnięty</div>
+          <div class="hero-pending-sub">Paweł jeszcze się nie wypowiedział. Ogłoś zwycięzcę poniżej 👇</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCE PANEL -->
+    <div class="announce-panel">
+      <div class="announce-head">
+        <div>
+          <div class="announce-title">📣 Ogłoś zwycięzcę</div>
+          <div class="announce-sub">Kliknij zawodnika — reszta to formalność.</div>
+        </div>
+        <label class="date-label">Data werdyktu
+          <input type="date" id="announceDate" class="date-input">
+        </label>
+      </div>
+      <div class="chip-grid" id="chipGrid"></div>
+      <button class="spin-btn" id="spinBtn">🎰 Niech los zadecyduje <small>(gdy Paweł się waha)</small></button>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Dni rozegrane</div>
+        <div class="stat-value" id="totalDays"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">👑 Aktualny lider</div>
+        <div class="stat-value small" id="leaderName"></div>
+        <div class="stat-sub"><span id="leaderWins"></span> zwycięstw</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🔥 Rekord passy</div>
+        <div class="stat-value mid"><span id="recordCount"></span> <span class="stat-unit">dni</span></div>
+        <div class="stat-sub" id="recordHolder"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">⚡ Passa na teraz</div>
+        <div class="stat-value mid"><span id="hotCount"></span> <span class="stat-unit">z rzędu</span></div>
+        <div class="stat-sub" id="hotName"></div>
+      </div>
+    </div>
+
+    <!-- PODIUM -->
+    <div class="podium-section">
+      <h2 class="section-title">🏅 Podium Chwały</h2>
+      <div class="podium">
+        <div class="podium-col podium-col--2">
+          <div class="avatar-podium" id="p2Initials"></div>
+          <div class="podium-name" id="p2Name"></div>
+          <div class="podium-wins"><span id="p2Wins"></span> wygranych</div>
+          <div class="podium-bar">2</div>
+        </div>
+        <div class="podium-col podium-col--1">
+          <div class="podium-crown">👑</div>
+          <div class="avatar-podium" id="p1Initials"></div>
+          <div class="podium-name" id="p1Name"></div>
+          <div class="podium-wins"><span id="p1Wins"></span> wygranych • <span id="p1Rate"></span>%</div>
+          <div class="podium-bar">1</div>
+        </div>
+        <div class="podium-col podium-col--3">
+          <div class="avatar-podium" id="p3Initials"></div>
+          <div class="podium-name" id="p3Name"></div>
+          <div class="podium-wins"><span id="p3Wins"></span> wygranych</div>
+          <div class="podium-bar">3</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="leaderboard-section">
+      <h2 class="section-title-left">📊 Tabela Wszech Czasów</h2>
+      <div class="leaderboard">
+        <div class="leaderboard-head-row">
+          <div>#</div><div>Zawodnik</div><div class="col-center">Wyg.</div><div class="col-center">% dni</div><div class="col-center">Passa</div><div class="col-center">Rekord</div>
+        </div>
+        <div id="leaderboardBody"></div>
+      </div>
+    </div>
+
+    <!-- BADGES -->
+    <div class="badges-section">
+      <h2 class="section-title-left">🎖️ Ściana Odznak</h2>
+      <div class="badges-grid" id="badgesGrid"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="history-section">
+      <h2 class="section-title-left">🗓️ Kronika Werdyktów</h2>
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+    <!-- FOOTER / CONTROLS -->
+    <div class="footer">
+      <div class="footer-actions">
+        <button class="btn-ghost btn-undo" id="undoBtn">↩︎ Cofnij ostatni werdykt</button>
+        <button class="btn-ghost btn-reset" id="resetBtn">🗑️ Wyczyść wszystko</button>
+      </div>
+      <p class="footer-note">🏆 <b>Mistrzostwa w Wygrywaniu Dnia™</b> • Wyniki ostateczne, nieodwołalne i w 100% subiektywne • Reklamacje kierować do Pawła (powodzenia). 😏</p>
+    </div>
+
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

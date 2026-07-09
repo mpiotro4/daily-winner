@@ -1,0 +1,13 @@
+{
+  "name": "daily-winner",
+  "version": "1.0.0",
+  "description": "Kto wygrał dzień? — daily winner tracker with file-backed storage",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
