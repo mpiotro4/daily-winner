@@ -18,7 +18,7 @@ const WD_GEN = ['niedziel', 'poniedziałków', 'wtorków', 'śród', 'czwartków
 const SHOW_NICKS = true;
 const HISTORY_LENGTH = 14;
 
-const state = { entries: [], announceDate: '', spinning: false };
+const state = { entries: [], announceDate: '', announceComment: '', spinning: false };
 
 // --- date / text helpers ------------------------------------------------
 
@@ -45,11 +45,11 @@ async function apiGetEntries() {
   if (!res.ok) throw new Error('load failed');
   return res.json();
 }
-async function apiAnnounce(date, winnerId) {
+async function apiAnnounce(date, winnerId, comment) {
   const res = await fetch('/api/entries', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date, winnerId }),
+    body: JSON.stringify({ date, winnerId, comment }),
   });
   if (!res.ok) throw new Error('save failed');
   return res.json();
@@ -159,6 +159,7 @@ function computeDerived() {
       initials: initials(m.name),
       name: m.name,
       nick: m.nick,
+      comment: e.comment || '',
       dateLabel: cap(fmt(e.date, false)),
       weekday: fmt(e.date, true).split(',')[0] || parseISO(e.date).toLocaleDateString('pl-PL', { weekday: 'long' }),
     };
@@ -178,6 +179,7 @@ function computeDerived() {
     todayName: tm ? tm.name : '',
     todayNick: tm ? '„' + tm.nick + '”' : '',
     todayInitials: tm ? initials(tm.name) : '',
+    todayComment: te && te.comment ? te.comment : '',
     chips,
     totalDays: total,
     leaderName: leader ? leader.m.name : 'Brak',
@@ -204,6 +206,9 @@ function render() {
     document.getElementById('todayInitials').textContent = d.todayInitials;
     document.getElementById('todayName').textContent = d.todayName;
     document.getElementById('todayNick').textContent = d.todayNick;
+    const commentEl = document.getElementById('todayComment');
+    commentEl.textContent = d.todayComment ? '„' + d.todayComment + '”' : '';
+    commentEl.hidden = !d.todayComment;
   }
 
   document.getElementById('totalDays').textContent = d.totalDays;
@@ -284,6 +289,7 @@ function renderHistory(history) {
       <div class="history-info">
         <span class="history-name">${escapeHtml(h.name)}</span>
         <span class="history-nick"> — ${escapeHtml(h.nick)}</span>
+        ${h.comment ? `<div class="history-comment">„${escapeHtml(h.comment)}”</div>` : ''}
       </div>
       <div class="history-date">
         <div class="history-date-day">${escapeHtml(h.dateLabel)}</div>
@@ -344,10 +350,12 @@ function playFanfareSound() {
   });
 }
 
-function speak(name) {
+function speak(name, comment) {
   try {
     if (!('speechSynthesis' in window) || !name) return;
-    const u = new SpeechSynthesisUtterance('Zwycięzcą dnia zostaje... ' + name + '!');
+    let text = 'Zwycięzcą dnia zostaje... ' + name + '!';
+    if (comment) text += ' ' + comment;
+    const u = new SpeechSynthesisUtterance(text);
     u.lang = 'pl-PL'; u.rate = 0.95; u.pitch = 1.15;
     speechSynthesis.cancel();
     setTimeout(() => speechSynthesis.speak(u), 650);
@@ -392,19 +400,22 @@ function showFanfareBanner(name) {
 
 async function announce(id) {
   const date = state.announceDate || todayISO();
+  const comment = state.announceComment.trim();
   let updated;
   try {
-    updated = await apiAnnounce(date, id);
+    updated = await apiAnnounce(date, id, comment);
   } catch (e) {
     alert('Nie udało się zapisać werdyktu. Spróbuj ponownie.');
     return;
   }
   state.entries = updated;
+  state.announceComment = '';
+  document.getElementById('announceComment').value = '';
   render();
   const m = memberById(id);
   fireConfetti();
   playHype();
-  speak(m ? m.name : '');
+  speak(m ? m.name : '', comment);
   showFanfareBanner(m ? m.name : '');
 }
 
@@ -464,6 +475,9 @@ function init() {
   const dateInput = document.getElementById('announceDate');
   dateInput.value = state.announceDate;
   dateInput.addEventListener('change', (e) => { state.announceDate = e.target.value; });
+
+  const commentInput = document.getElementById('announceComment');
+  commentInput.addEventListener('input', (e) => { state.announceComment = e.target.value; });
 
   document.getElementById('spinBtn').addEventListener('click', spin);
   document.getElementById('undoBtn').addEventListener('click', undoLast);

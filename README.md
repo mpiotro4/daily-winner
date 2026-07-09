@@ -2,7 +2,9 @@
 
 Daily "who won the day" tracker for the team. Click a player to announce them
 as today's winner (confetti, fanfare, the works), or let the slot-machine spin
-pick one for you. Leaderboard, podium, streaks and badges update instantly.
+pick one for you. Add an optional comment on why they won — it's shown on the
+winner card and history, and read aloud via the browser's speech synthesis.
+Leaderboard, podium, streaks and badges update instantly.
 
 ## Running it
 

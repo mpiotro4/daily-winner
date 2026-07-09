@@ -46,6 +46,7 @@
           <div class="avatar-hero" id="todayInitials"></div>
           <div class="hero-name" id="todayName"></div>
           <div class="hero-nick" id="todayNick"></div>
+          <div class="hero-comment" id="todayComment" hidden></div>
           <div class="hero-crown">👑</div>
         </div>
         <div class="hero-pending" id="heroPending" hidden>
@@ -67,6 +68,9 @@
           <input type="date" id="announceDate" class="date-input">
         </label>
       </div>
+      <label class="comment-label">Komentarz do werdyktu (opcjonalnie) — lektor go przeczyta
+        <input type="text" id="announceComment" class="comment-input" maxlength="300" placeholder="np. rozłożył wszystkich jednym slajdem 💪">
+      </label>
       <div class="chip-grid" id="chipGrid"></div>
       <button class="spin-btn" id="spinBtn">🎰 Niech los zadecyduje <small>(gdy Paweł się waha)</small></button>
     </div>
