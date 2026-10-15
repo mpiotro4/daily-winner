@@ -7,7 +7,8 @@
  * Rules enforced here (not in the browser):
  *  - the date of a verdict is always the server's "today" — clients can't pick it,
  *  - one verdict per day; once saved it can't be changed or removed via HTTP,
- *  - optional ADMIN_PIN env var: when set, announcing requires that PIN.
+ *  - optional ADMIN_PIN env var: when set, announcing requires that PIN,
+ *  - every entry is hash-chained to the previous one (see lib/chain.js).
  */
 
 const http = require('http');
@@ -15,6 +16,7 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 const crypto = require('crypto');
+const { blockHash, lastHash, sealChain, verifyChain } = require('./lib/chain');
 
 const ROOT = __dirname;
 const DATA_FILE = path.join(ROOT, 'data.json');
@@ -75,6 +77,7 @@ function checkPin(req) {
 // --- in-memory cache + serialized persistence -------------------------
 
 let entries = [];
+let chain = verifyChain(entries);
 let writeChain = Promise.resolve();
 
 async function loadEntries() {
@@ -91,6 +94,16 @@ async function loadEntries() {
   const parsed = JSON.parse(raw);
   if (!Array.isArray(parsed)) throw new Error('data.json must contain a JSON array');
   entries = sortEntries(parsed);
+
+  // Files from before the chain existed have no hashes at all: seal them once.
+  if (entries.length && entries.every((e) => !e.hash)) {
+    sealChain(entries);
+    await persist();
+    console.log(`Sealed ${entries.length} pre-chain entries into the blockchain.`);
+  }
+
+  chain = verifyChain(entries);
+  if (!chain.ok) console.warn(`⚠️  Chain broken at ${chain.brokenAt} — someone edited data.json by hand.`);
 }
 
 function persist() {
@@ -169,7 +182,7 @@ async function serveStatic(req, res) {
 }
 
 function statePayload() {
-  return { entries, today: todayISO(), pinRequired: !!ADMIN_PIN };
+  return { entries, today: todayISO(), pinRequired: !!ADMIN_PIN, chain };
 }
 
 // --- routing -------------------------------------------------------------
@@ -194,17 +207,23 @@ const server = http.createServer(async (req, res) => {
       if (entries.some((e) => e.date === today)) {
         return sendJson(res, 409, { error: 'Today already has a verdict', ...statePayload() });
       }
+      // New blocks can only go on the end of the chain.
+      if (entries.length && entries[entries.length - 1].date > today) {
+        return sendJson(res, 409, { error: 'Server clock is behind the last verdict', ...statePayload() });
+      }
       const comment = typeof body.comment === 'string' ? body.comment.trim() : '';
       const entry = { date: today, winnerId: body.winnerId };
       if (comment) entry.comment = comment;
+      entry.hash = blockHash(lastHash(entries), entry);
       const previous = entries;
-      entries = sortEntries([...entries, entry]);
+      entries = [...entries, entry];
       try {
         await persist();
       } catch (err) {
         entries = previous;
         throw err;
       }
+      chain = verifyChain(entries);
       return sendJson(res, 200, statePayload());
     }
 

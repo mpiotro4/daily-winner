@@ -325,5 +325,14 @@ button { font: inherit; }
 
 /* --- footer --- */
 .footer { margin-top: clamp(34px,5vw,56px); text-align: center; }
+.chain-badge {
+  display: inline-block; max-width: 100%; margin: 0 auto 22px; padding: 9px 18px; border-radius: 999px;
+  font-size: 13px; font-weight: 700; letter-spacing: .3px; line-height: 1.5;
+  border: 1px solid rgba(245,197,66,.35); background: rgba(245,197,66,.07); color: var(--gold-pale);
+}
+.chain-badge[hidden] { display: none; }
+.chain-badge.broken { border-color: rgba(224,110,90,.55); background: rgba(224,110,90,.1); color: var(--danger); }
+.chain-badge code, .history-hash { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.history-hash { font-size: 10.5px; color: var(--muted-2); opacity: .8; margin-top: 2px; }
 .footer-note { max-width: 620px; margin: 0 auto; color: #7d745f; font-size: 13px; line-height: 1.6; }
 .footer-note b { color: var(--gold-strong); }

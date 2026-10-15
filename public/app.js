@@ -21,7 +21,7 @@ const HISTORY_LENGTH = 14;
 const PIN_STORAGE_KEY = 'dwt-pin';
 
 // `today` comes from the server, which is the only judge of what day it is.
-const state = { entries: [], today: '', pinRequired: false, announceComment: '', busy: false, spinning: false };
+const state = { entries: [], today: '', pinRequired: false, chain: null, announceComment: '', busy: false, spinning: false };
 
 // --- date / text helpers ------------------------------------------------
 
@@ -65,6 +65,7 @@ function applyServerState(data) {
   state.entries = data.entries;
   state.today = data.today;
   state.pinRequired = !!data.pinRequired;
+  state.chain = data.chain || null;
 }
 
 async function refreshState() {
@@ -171,6 +172,7 @@ function computeDerived() {
       name: m.name,
       nick: m.nick,
       comment: e.comment || '',
+      hash: e.hash || '',
       dateLabel: cap(fmt(e.date, false)),
       weekday: fmt(e.date, true).split(',')[0] || parseISO(e.date).toLocaleDateString('pl-PL', { weekday: 'long' }),
     };
@@ -248,6 +250,31 @@ function render() {
   renderLeaderboard(d.leaderboard);
   renderBadges(d.badges);
   renderHistory(d.history);
+  renderChainBadge();
+}
+
+function pluralBlocks(n) {
+  if (n === 1) return '1 blok';
+  const lastTwo = n % 100, last = n % 10;
+  return n + (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14) ? ' bloki' : ' bloków');
+}
+
+function renderChainBadge() {
+  const el = document.getElementById('chainBadge');
+  const c = state.chain;
+  if (!c) { el.hidden = true; return; }
+  const prefix = '⛓️ Kronika zabezpieczona technologią blockchain™ • ';
+  let html;
+  if (!c.ok) {
+    html = prefix + '❌ Ktoś grzebał w historii! Łańcuch zerwany od ' + escapeHtml(cap(fmt(c.brokenAt, false)));
+  } else if (!c.blocks) {
+    html = prefix + 'blok genezy czeka na pierwszy werdykt';
+  } else {
+    html = prefix + pluralBlocks(c.blocks) + ' • ✅ nienaruszona • <code>#' + escapeHtml(c.head.slice(0, 8)) + '</code>';
+  }
+  el.innerHTML = html;
+  el.classList.toggle('broken', !c.ok);
+  el.hidden = false;
 }
 
 function renderChips(chips) {
@@ -308,6 +335,7 @@ function renderHistory(history) {
       <div class="history-date">
         <div class="history-date-day">${escapeHtml(h.dateLabel)}</div>
         <div class="history-date-weekday">${escapeHtml(h.weekday)}</div>
+        ${h.hash ? `<div class="history-hash" title="${escapeHtml(h.hash)}">⛓ ${escapeHtml(h.hash.slice(0, 8))}</div>` : ''}
       </div>
     </div>
   `).join('');
