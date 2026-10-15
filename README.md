@@ -14,7 +14,21 @@ and read aloud via the browser's speech synthesis.
 - **Optional judge PIN.** Start the server with `ADMIN_PIN` set and only people
   who know it can announce. 5 wrong attempts lock that IP out for 15 minutes.
 
-Made a mistake? Stop the server, edit `data.json` by hand, start it again.
+Made a mistake? Stop the server, edit `data.json` by hand, start it again —
+and enjoy the blockchain calling you out (see below).
+
+## Blockchain™
+
+Every entry in `data.json` carries a `hash`: the SHA-256 of the previous entry's
+hash plus its own date, winner and comment (`lib/chain.js`). Change any past
+verdict by hand and every hash from that day on stops matching: the server logs
+a warning on startup and the page footer switches from
+"✅ nienaruszona" to "❌ Ktoś grzebał w historii!". The app keeps working, but
+the mark stays.
+
+It's tamper-evident, not tamper-proof — whoever controls the server can always
+recompute the chain. Files from before this feature are sealed automatically
+on first start, and the CSV import reseals the chain after inserting old days.
 
 ## Running it
 
@@ -66,6 +80,7 @@ is imported. Safe to re-run; the previous file is kept as `data.json.bak`.
 - `server.js` — zero-dependency Node HTTP server: serves `public/` and exposes
   `GET /api/entries` and `POST /api/entries` (today's verdict only).
 - `public/` — the frontend (plain HTML/CSS/JS, no build step).
+- `lib/chain.js` — the hash chain (seal / verify), shared by server and import.
 - `scripts/import-csv.js` — one-off import of the old spreadsheet export.
 - `Tracker Dnia.dc.html` — the original design export this app was built from
   (kept for reference; not used at runtime).

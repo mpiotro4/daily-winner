@@ -9,11 +9,13 @@
  * imported file on its next save.
  *
  * Rules: rows without a winner are skipped, dates already in data.json are never
- * overwritten, and nothing dated today or later is imported.
+ * overwritten, and nothing dated today or later is imported. The hash chain
+ * (lib/chain.js) is recomputed for the whole file afterwards.
  */
 
 const fs = require('fs');
 const path = require('path');
+const { sealChain, verifyChain } = require('../lib/chain');
 
 const DATA_FILE = path.join(__dirname, '..', 'data.json');
 
@@ -106,7 +108,13 @@ function main() {
     process.exit(1);
   }
 
-  const merged = [...existing, ...toAdd].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const sortByDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  const before = verifyChain([...existing].sort(sortByDate));
+  if (existing.length && existing.some((e) => e.hash) && !before.ok) {
+    console.warn(`\n⚠️  Existing chain was already broken at ${before.brokenAt}; resealing will hide that.`);
+  }
+  // Imported days land in the middle of the chain, so every hash is recomputed.
+  const merged = sealChain([...existing, ...toAdd].sort(sortByDate));
   if (fs.existsSync(DATA_FILE)) fs.copyFileSync(DATA_FILE, DATA_FILE + '.bak');
   const tmp = DATA_FILE + '.import.tmp';
   fs.writeFileSync(tmp, JSON.stringify(merged, null, 2), 'utf8');
