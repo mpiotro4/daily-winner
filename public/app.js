@@ -18,14 +18,17 @@ const WD_GEN = ['niedziel', 'poniedziałków', 'wtorków', 'śród', 'czwartków
 const SHOW_NICKS = true;
 const HISTORY_LENGTH = 14;
 
-const state = { entries: [], announceDate: '', announceComment: '', spinning: false };
+const PIN_STORAGE_KEY = 'dwt-pin';
+
+// `today` comes from the server, which is the only judge of what day it is.
+const state = { entries: [], today: '', pinRequired: false, announceComment: '', busy: false, spinning: false };
 
 // --- date / text helpers ------------------------------------------------
 
 function isoOf(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
-function todayISO() { return isoOf(new Date()); }
+function todayISO() { return state.today || isoOf(new Date()); }
 function parseISO(s) { return new Date(s + 'T00:00:00'); }
 function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 function initials(name) { return name.split(' ').filter(Boolean).map((w) => w[0].toUpperCase()).join('').slice(0, 2); }
@@ -40,29 +43,37 @@ function escapeHtml(s) {
 
 // --- API ------------------------------------------------------------------
 
-async function apiGetEntries() {
-  const res = await fetch('/api/entries');
+async function apiGetState() {
+  const res = await fetch('/api/entries', { cache: 'no-store' });
   if (!res.ok) throw new Error('load failed');
   return res.json();
 }
-async function apiAnnounce(date, winnerId, comment) {
+// Returns { status, data } so callers can react to 401/409/429 individually.
+async function apiAnnounce(winnerId, comment, pin) {
   const res = await fetch('/api/entries', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date, winnerId, comment }),
+    headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': pin },
+    body: JSON.stringify({ winnerId, comment }),
   });
-  if (!res.ok) throw new Error('save failed');
-  return res.json();
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  return { status: res.status, data };
 }
-async function apiUndo() {
-  const res = await fetch('/api/entries/undo', { method: 'POST' });
-  if (!res.ok) throw new Error('undo failed');
-  return res.json();
+
+function applyServerState(data) {
+  if (!data || !Array.isArray(data.entries)) return;
+  state.entries = data.entries;
+  state.today = data.today;
+  state.pinRequired = !!data.pinRequired;
 }
-async function apiReset() {
-  const res = await fetch('/api/entries/reset', { method: 'POST' });
-  if (!res.ok) throw new Error('reset failed');
-  return res.json();
+
+async function refreshState() {
+  try {
+    applyServerState(await apiGetState());
+    render();
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 // --- derived stats (leaderboard, podium, badges, streaks) ------------------
@@ -202,6 +213,9 @@ function render() {
   document.getElementById('heroDateLabel').textContent = d.heroDateLabel;
   document.getElementById('heroWinner').hidden = !d.todayWinnerExists;
   document.getElementById('heroPending').hidden = d.todayWinnerExists;
+  document.getElementById('announceForm').hidden = d.todayWinnerExists;
+  document.getElementById('announceLocked').hidden = !d.todayWinnerExists;
+  document.getElementById('pinLabel').hidden = !state.pinRequired;
   if (d.todayWinnerExists) {
     document.getElementById('todayInitials').textContent = d.todayInitials;
     document.getElementById('todayName').textContent = d.todayName;
@@ -398,21 +412,46 @@ function showFanfareBanner(name) {
 
 // --- actions ------------------------------------------------------------
 
+function currentPin() {
+  return document.getElementById('announcePin').value;
+}
+
+function setBusy(busy) {
+  state.busy = busy;
+  document.querySelectorAll('#chipGrid .chip, #spinBtn').forEach((b) => { b.disabled = busy; });
+}
+
 async function announce(id) {
-  const date = state.announceDate || todayISO();
+  if (state.busy) return;
+  const m = memberById(id);
+  if (!confirm('Zatwierdzić werdykt: ' + (m ? m.name : '?') + '? Dzisiejszego wyniku nie da się potem zmienić.')) return;
   const comment = state.announceComment.trim();
-  let updated;
+  setBusy(true);
+  let result;
   try {
-    updated = await apiAnnounce(date, id, comment);
+    result = await apiAnnounce(id, comment, currentPin());
   } catch (e) {
-    alert('Nie udało się zapisać werdyktu. Spróbuj ponownie.');
+    alert('Brak połączenia z serwerem. Werdykt NIE został zapisany — spróbuj ponownie.');
+    return;
+  } finally {
+    setBusy(false);
+  }
+
+  if (result.status === 409) {
+    applyServerState(result.data);
+    render();
+    alert('Dzisiejszy werdykt już zapadł — ktoś był szybszy.');
     return;
   }
-  state.entries = updated;
+  if (result.status === 401) { alert('Zły PIN sędziego.'); return; }
+  if (result.status === 429) { alert('Za dużo błędnych prób PIN-u. Spróbuj za 15 minut.'); return; }
+  if (result.status !== 200) { alert('Nie udało się zapisać werdyktu. Spróbuj ponownie.'); return; }
+
+  try { localStorage.setItem(PIN_STORAGE_KEY, currentPin()); } catch (e) {}
+  applyServerState(result.data);
   state.announceComment = '';
   document.getElementById('announceComment').value = '';
   render();
-  const m = memberById(id);
   fireConfetti();
   playHype();
   speak(m ? m.name : '', comment);
@@ -420,7 +459,11 @@ async function announce(id) {
 }
 
 function spin() {
-  if (state.spinning) return;
+  if (state.spinning || state.busy) return;
+  if (state.pinRequired && !currentPin()) {
+    alert('Najpierw wpisz PIN sędziego.');
+    return;
+  }
   getAudioCtx();
   const overlay = document.getElementById('spinOverlay');
   const nameEl = document.getElementById('spinName');
@@ -447,45 +490,25 @@ function spin() {
   tick();
 }
 
-async function undoLast() {
-  try {
-    state.entries = await apiUndo();
-  } catch (e) {
-    alert('Nie udało się cofnąć werdyktu.');
-    return;
-  }
-  render();
-}
-
-async function resetAll() {
-  if (!confirm('Wyczyścić CAŁĄ historię mistrzostw? Tego nie da się cofnąć (Paweł się nie ucieszy).')) return;
-  try {
-    state.entries = await apiReset();
-  } catch (e) {
-    alert('Nie udało się wyczyścić historii.');
-    return;
-  }
-  render();
-}
-
 // --- init -----------------------------------------------------------------
 
 function init() {
-  state.announceDate = todayISO();
-  const dateInput = document.getElementById('announceDate');
-  dateInput.value = state.announceDate;
-  dateInput.addEventListener('change', (e) => { state.announceDate = e.target.value; });
-
   const commentInput = document.getElementById('announceComment');
   commentInput.addEventListener('input', (e) => { state.announceComment = e.target.value; });
 
-  document.getElementById('spinBtn').addEventListener('click', spin);
-  document.getElementById('undoBtn').addEventListener('click', undoLast);
-  document.getElementById('resetBtn').addEventListener('click', resetAll);
+  try { document.getElementById('announcePin').value = localStorage.getItem(PIN_STORAGE_KEY) || ''; } catch (e) {}
 
-  apiGetEntries()
-    .then((entries) => { state.entries = entries; render(); })
+  document.getElementById('spinBtn').addEventListener('click', spin);
+
+  apiGetState()
+    .then((data) => { applyServerState(data); render(); })
     .catch((err) => { console.error(err); alert('Nie udało się wczytać danych z serwera.'); });
+
+  // Keep a tab left open overnight (or open on two devices) in sync with the server.
+  setInterval(() => { if (!state.busy && !state.spinning) refreshState(); }, 60000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !state.busy && !state.spinning) refreshState();
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);

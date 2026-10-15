@@ -1,2 +1,4 @@
 data.json
+data.json.bak
+data.json.*.tmp
 node_modules/
